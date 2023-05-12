@@ -1,4 +1,14 @@
 {
     "ros.distro": "humble",
-    "materialkv.pythonFile": "main.py"
+    "materialkv.pythonFile": "main.py",
+    "python.autoComplete.extraPaths": [
+        "/home/nmelgiri/workspace/install/closed_loop_controller/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/nmelgiri/workspace/install/closed_loop_controller/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ]
 }

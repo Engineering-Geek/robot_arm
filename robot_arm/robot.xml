@@ -1,0 +1,86 @@
+<mujoco model="arm">
+    <option timestep="0.001" />
+    <compiler inertiafromgeom="true"/>
+
+    <default>
+        <joint armature="0.1" damping="0.5" limited="true" />
+        <motor gear="100" />
+    </default>
+
+    <asset>
+        <mesh file="arm/base_bottom.stl" />
+        <mesh file="arm/base_top.stl" />
+        <mesh file="arm/base_link.stl" />
+        <mesh file="arm/camera.stl" />
+        <mesh file="arm/ee_claw.stl" />
+        <mesh file="arm/end_effector_base.stl" />
+        <mesh file="arm/long_link.stl" />
+        <mesh file="arm/medium_link.stl" />
+        <mesh file="arm/short_link.stl" />
+        <mesh file="arm/x_f.stl" />
+        <mesh file="arm/x_m.stl" />
+        <mesh file="arm/z_f.stl" />
+        <mesh file="arm/z_m.stl" />
+
+        <material name="steel" rgba="0.27 0.50 0.70 1" />
+        <material name="aluminum" rgba="0.83 0.83 0.83 1" />
+        <material name="abs" rgba="1 0 0.5 1" />
+        <material name="floor" rgba="0.5 0.5 0.5 1" />
+    </asset>
+
+    <worldbody>
+        <geom name="floor" pos="0 0 0" size="1 1 0.01" type="plane" material="steel" />
+        <light name="top" pos="0 0 2.5" dir="0 0 -1" diffuse="1 1 1" />
+        <light name="front" pos="0 2.5 0" dir="0 -1 0" diffuse="1 1 1" />
+        <light name="back" pos="0 -2.5 0" dir="0 1 0" diffuse="1 1 1" />
+        <light name="left" pos="2.5 0 0" dir="-1 0 0" diffuse="1 1 1" />
+        <light name="right" pos="-2.5 0 0" dir="1 0 0" diffuse="1 1 1" />
+
+        <body name="base_bottom" pos="0 0 0.01">
+            <geom name="base_bottom" type="mesh" mesh="base_bottom" material="aluminum"/>
+            <body name="base_top" pos="0 0 0.025">
+                <geom name="base_top" type="mesh" mesh="base_top" material="aluminum"/>
+                <joint name="joint_1" pos="0 0 0" axis="0 0 1" type="hinge" limited="false"/>
+                <body name="first_link" pos="0 0 0.3" euler="90 90 0">
+                    <geom name="first_link" type="mesh" mesh="base_link" material="aluminum"/>
+                    <joint name="joint_2" pos="0 -.175 0" axis="1 0 0" type="hinge" limited="true" range="-90 90"/>
+                    <body name="z_f_1" pos="0 0.235 0" euler="0 0 0">
+                        <geom name="z_f_1" type="mesh" mesh="z_f" material="steel"/>
+                        <body name="z_m_1" pos="0 0.05 0" euler="180 180 0">
+                            <geom name="z_m_1" type="mesh" mesh="z_m" material="steel"/>
+                            <joint name="joint_3" pos="0 .025 0" axis="1 0 0" type="hinge" limited="true" range="-90 90"/>
+                            <body name="second_link" pos="0 -0.235 0" euler="0 0 0">
+                                <geom name="second_link" type="mesh" mesh="long_link" material="aluminum"/>
+                                <body name="z_f_2" pos="0 -0.235 0" euler="180 0 0">
+                                    <geom name="z_f_2" type="mesh" mesh="z_f" material="steel"/>
+                                    <body name="z_m_2" pos="0 0.05 0" euler="180 180 0">
+                                        <geom name="z_m_2" type="mesh" mesh="z_m" material="steel"/>
+                                        <joint name="joint_4" pos="0 .025 0" axis="1 0 0" type="hinge" limited="true" range="-90 90"/>
+                                        <body name="third_link" pos="0 -0.11 0" euler="0 0 0">
+                                            <geom name="third_link" type="mesh" mesh="medium_link" material="aluminum"/>
+                                            <body name="x_f_1" pos="0 -0.11 0" euler="0 0 0">
+                                                <geom name="x_f_1" type="mesh" mesh="x_f" material="steel"/>
+                                                <body name="x_m_1" pos="0 0 0" euler="180 180 0">
+                                                    <geom name="x_m_1" type="mesh" mesh="x_m" material="steel"/>
+                                                    <joint name="joint_5" pos="0 0 0" axis="0 0 1" type="hinge" limited="false"/>
+                                                </body>
+                                            </body>
+                                        </body>
+                                    </body>
+                                </body>
+                            </body>
+                        </body>
+                    </body>
+                </body>
+            </body>
+        </body>
+        
+    </worldbody>
+    <actuator>
+        <motor joint="joint_1" name="motor_1" />
+        <motor joint="joint_2" name="motor_2" />
+        <motor joint="joint_3" name="motor_3" />
+        <motor joint="joint_4" name="motor_4" />
+        <motor joint="joint_5" name="motor_5" />
+    </actuator>
+</mujoco>

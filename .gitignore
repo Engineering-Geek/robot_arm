@@ -1,5 +1,6 @@
 venv
 .idea
+.vscode
 
 # Ignore everything in the robot_arm/arm directory except config.json
 robot_arm/arm/*
