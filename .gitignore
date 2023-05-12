@@ -1,0 +1,7 @@
+venv
+.idea
+
+# Ignore everything in the robot_arm/arm directory except config.json
+robot_arm/arm/*
+!robot_arm/arm/config.json
+```
