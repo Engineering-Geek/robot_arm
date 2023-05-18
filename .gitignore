@@ -5,8 +5,6 @@ venv
 # Ignore everything in the robot_arm/arm directory except config.json
 robot_arm/arm/*
 !robot_arm/arm/config.json
-robot_arm/mujoco_arm/*
-!robot_arm/mujoco_arm/config.json
 ```
 
 temp/*
