@@ -1,9 +1,9 @@
 <mujoco model="arm">
-    <option timestep="0.001" jacobian="dense"/>
+    <option timestep="0.01" jacobian="dense"/>
     <compiler inertiafromgeom="true" autolimits="true"/>
 
     <default>
-        <joint armature="2" damping="2" limited="true" />
+        <joint armature="0.5" damping="0.1" limited="true" />
         <motor gear="50" ctrlrange="-1 1" />
     </default>
 
@@ -119,13 +119,13 @@
         <framepos objtype="site" objname="target"/>
     </sensor>
     <actuator>
-        <motor joint="joint_1" name="motor_1" />
-        <motor joint="joint_2" name="motor_2" />
-        <motor joint="joint_3" name="motor_3" />
-        <motor joint="joint_4" name="motor_4" />
-        <motor joint="joint_5" name="motor_5" />
-        <motor joint="joint_6" name="motor_6" />
-        <motor joint="joint_7" name="motor_7" />
+        <motor joint="joint_1" name="motor_1" forcerange="-1000 1000" gear="100" />
+        <motor joint="joint_2" name="motor_2" forcerange="-1000 1000" gear="100" />
+        <motor joint="joint_3" name="motor_3" forcerange="-1000 1000" gear="100" />
+        <motor joint="joint_4" name="motor_4" forcerange="-1000 1000" gear="100" />
+        <motor joint="joint_5" name="motor_5" forcerange="-1000 1000" gear="100" />
+        <motor joint="joint_6" name="motor_6" forcerange="-1000 1000" gear="100" />
+        <motor joint="joint_7" name="motor_7" forcerange="-1000 1000" gear="100" />
         <!-- <motor joint="joint_ee_1" name="motor_ee_1" />
         <motor joint="joint_ee_2" name="motor_ee_2" /> -->
     </actuator>

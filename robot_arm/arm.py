@@ -1,16 +1,25 @@
 from copy import copy
 import time
+from typing import Union
 
 import numpy as np
 
 import mujoco
 import mujoco.viewer
+import mujoco.renderer
+import mediapy as media
+from tqdm.auto import tqdm
 
 
 class Arm:
-    def __init__(self, robot_mjcf_path: str) -> None:
+    def __init__(self, robot_mjcf_path: str, kp: float, kd: float, ki: float) -> None:
+        self.kp = kp
+        self.kd = kd
+        self.ki = ki
+        self.integral_error = np.zeros(3)
         self.model = mujoco.MjModel.from_xml_path(robot_mjcf_path)
         self.data = mujoco.MjData(self.model)
+        self.renderer = mujoco.renderer.Renderer(self.model)
 
         self.joint_names = [self.model.joint(i).name for i in range(self.model.njnt)]
         self.joints = [self.model.joint(i) for i in range(self.model.njnt - 2)]
@@ -29,7 +38,13 @@ class Arm:
         self.dt = self.model.opt.timestep
         self.mass_matrix = np.zeros((self.model.nv, self.model.nv))
         self._gravity_matrix = np.zeros(self.model.nv)
-        self.step_index = 0
+        self.step_index = -1
+
+        self.update_jacobian()
+        self.update_mass_matrix()
+        self.previous_location = self.data.site_xpos[0]
+
+        self.errors = []
 
     def update_jacobian(self) -> None:
         """
@@ -50,65 +65,63 @@ class Arm:
     def coriolis_and_gravitational_forces(self):
         return self.data.qfrc_bias
 
-    def simulate(self,
-                 steps: int = 100,
-                 render: bool = True,
-                 _time: bool = False,
-                 real_time_factor: float = 1.0,
-                 max_time: float = 10.0,
-                 ) -> None:
-        """
-        Simulates the robot for the given number of steps.
-        Args:
-            steps: Number of steps to simulate.
-            render: Whether to render the simulation.
-            _time: Whether to print the time taken for each step.
-            real_time_factor: The factor by which to slow down the simulation. 1.0 means real time, and 0.0 means as fast as possible.
-            max_time: The maximum time to simulate for. If the simulation takes longer than this, it will be stopped.
+    def simulate(self, real_time_factor: float = 1.0, max_time: float = 10.0):
 
-        Returns:
-
-        """
-        start_time = time.time()
-        times = []
-        viewer = mujoco.viewer.launch_passive(self.model, self.data)
-        for i in range(steps):
-            self._step()
-            if render:
+        with mujoco.viewer.launch_passive(self.model, self.data) as viewer:
+            start = time.time()
+            while viewer.is_running() and time.time() - start < max_time:
+                step_start = time.time()
+                self._step()
                 viewer.sync()
-                time_taken = time.time() - start_time
-                time_until_next_step = self.model.opt.timestep - time_taken % self.model.opt.timestep
-                times.append(time_taken)
+
+                time_until_next_step = self.model.opt.timestep - (time.time() - step_start)
                 if time_until_next_step > 0:
                     time.sleep(time_until_next_step / real_time_factor)
-            if max_time is not None and time.time() - start_time > max_time:
-                break
-        if _time:
-            print(f"Time taken: {sum(times)}")
-            print(f"Average time per step: {sum(times) / len(times)}")
 
     def _step(self) -> None:
         """
         Steps the simulation forward by one timestep.
         Returns: None
         """
-        self.data.ctrl[:] = self.controller()
+        if self.step_index > 0:
+            self.data.ctrl[:] = self.controller()
         mujoco.mj_step(self.model, self.data)
         self.update_jacobian()
         self.update_mass_matrix()
+        self.step_index += 1
+
+    def _torque(self, target_position: np.array, target_velocity: np.array):
+        """The torque needed will be calculated using the following equations:
+
+        .. math::
+            \dot{q}_{target} = W^{-1}J^{T}(JW^{-1}J^{T})^{-1}\dot{x}_{target}
+
+        Args:
+            target_position:
+            target_velocity:
+
+        Returns:
+
+        """
+        pos_error = target_position - self.data.site_xpos[0]
+        vel_error = target_velocity - (self.data.site_xpos[0] - self.previous_location) / self.dt
+        self.integral_error += pos_error * self.dt
+        control_error = self.kp * pos_error + self.kd * vel_error + self.ki * self.integral_error
+        mass_matrix = self.mass_matrix
+        jacobian = self.jacobian[:3, :]
+        inv_mass_matrix = np.linalg.inv(mass_matrix)
+        q_dot_desired = inv_mass_matrix @ jacobian.T @ (jacobian @ inv_mass_matrix @ jacobian.T) @ control_error
+        q_dot_dot_desired = (q_dot_desired - self.data.qvel) / self.dt
+        applied_torque = mass_matrix @ (q_dot_dot_desired + self.kd * (q_dot_desired - self.data.qvel)) + \
+                         self.coriolis_and_gravitational_forces
+        return applied_torque
+
+    def end_effector_location(self):
+        return self.data.site_xpos[0]
 
     def controller(self) -> np.ndarray:
         """
         Returns the control input to the robot.
         Returns: np.ndarray
         """
-        return np.ones(self.model.nu)
-
-
-def main():
-    arm = Arm("/home/nmelgiri/workspace/src/robot_arm/robot_arm/robot.mjcf")
-    arm.simulate(100000, max_time=30.0)
-
-
-if __name__ == "__main__":
-    main()
+        raise NotImplementedError
